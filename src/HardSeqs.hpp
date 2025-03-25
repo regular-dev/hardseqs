@@ -143,8 +143,8 @@ struct HardSeqs : Module
   void stepParamChangedHandler(int step_param_id);
   void syncParamWithLocalSteps(int step_param_id);
 
-  json_t* toJson() override;
-  void fromJson(json_t* from) override;
+  json_t* dataToJson() override;
+  void dataFromJson(json_t* root_json) override;
 
   std::unique_ptr<SynthDevKit::CV> m_cv_start;
   std::unique_ptr<SynthDevKit::CV> m_cv_stop;

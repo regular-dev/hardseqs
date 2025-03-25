@@ -1,6 +1,7 @@
 #include "HardSeqs.hpp"
 
 #include <iostream>
+#include "jansson.h"
 
 #define ADD_CV(a, b) clamp(a.value + b.value, 0.0f, 10.0f)
 constexpr const float kCvThreshold = 1.7;
@@ -166,12 +167,62 @@ void HardSeqs::syncParamWithLocalSteps(int step_param_id)
     }
 }
 
-json_t* HardSeqs::toJson()
+json_t* HardSeqs::dataToJson()
 {
-    return Module::toJson();
+    json_t* out_json_array = json_array();
+
+    for (const auto &it : m_steps) {
+        json_t* json_entry = json_object();
+
+        json_object_set_new(json_entry, "is_enabled", json_integer(static_cast<int>(it.is_enabled)));
+        json_object_set_new(json_entry, "prob", json_real(it.prob));
+        json_object_set_new(json_entry, "mod1", json_real(it.mod1));
+        json_object_set_new(json_entry, "mod2", json_real(it.mod2));
+        json_object_set_new(json_entry, "mod3", json_real(it.mod3));
+        json_object_set_new(json_entry, "len_each_n", json_integer(it.len_each_n));
+
+        json_object_set_new(json_entry, "each_step1_enabled", json_integer(static_cast<int>(it.each_n[0])));
+        json_object_set_new(json_entry, "each_step2_enabled", json_integer(static_cast<int>(it.each_n[1])));
+        json_object_set_new(json_entry, "each_step3_enabled", json_integer(static_cast<int>(it.each_n[2])));
+        json_object_set_new(json_entry, "each_step4_enabled", json_integer(static_cast<int>(it.each_n[3])));
+        json_object_set_new(json_entry, "each_step5_enabled", json_integer(static_cast<int>(it.each_n[4])));
+
+        json_array_append_new(out_json_array, json_entry);
+    }
+
+    return out_json_array;
 }
 
-void HardSeqs::fromJson(json_t* from)
+void HardSeqs::dataFromJson(json_t* from)
 {
-    Module::fromJson(from);
+    std::size_t index;
+    json_t* json_entry;
+
+    json_array_foreach(from, index, json_entry) {
+        json_t* val_is_enabled = json_object_get(json_entry, "is_enabled");
+        json_t* val_prob = json_object_get(json_entry, "prob");
+        json_t* val_mod1 = json_object_get(json_entry, "mod1");
+        json_t* val_mod2 = json_object_get(json_entry, "mod2");
+        json_t* val_mod3 = json_object_get(json_entry, "mod3");
+        json_t* val_len_each_n = json_object_get(json_entry, "len_each_n");
+
+        json_t* val_each_step1_enabled = json_object_get(json_entry, "each_step1_enabled");
+        json_t* val_each_step2_enabled = json_object_get(json_entry, "each_step2_enabled");
+        json_t* val_each_step3_enabled = json_object_get(json_entry, "each_step3_enabled");
+        json_t* val_each_step4_enabled = json_object_get(json_entry, "each_step4_enabled");
+        json_t* val_each_step5_enabled = json_object_get(json_entry, "each_step5_enabled");
+
+        m_steps[index].is_enabled = static_cast<bool>(json_integer_value(val_is_enabled));
+        m_steps[index].prob = static_cast<int>(json_integer_value(val_prob));
+        m_steps[index].mod1 = static_cast<float>(json_real_value(val_mod1));
+        m_steps[index].mod2 = static_cast<float>(json_real_value(val_mod2));
+        m_steps[index].mod3 = static_cast<float>(json_real_value(val_mod3));
+        m_steps[index].len_each_n = static_cast<int>(json_integer_value(val_len_each_n));
+
+        m_steps[index].each_n[0] = static_cast<bool>(json_integer_value(val_each_step1_enabled));
+        m_steps[index].each_n[1] = static_cast<bool>(json_integer_value(val_each_step2_enabled));
+        m_steps[index].each_n[2] = static_cast<bool>(json_integer_value(val_each_step3_enabled));
+        m_steps[index].each_n[3] = static_cast<bool>(json_integer_value(val_each_step4_enabled));
+        m_steps[index].each_n[4] = static_cast<bool>(json_integer_value(val_each_step5_enabled));
+    }
 }
