@@ -225,4 +225,7 @@ void HardSeqs::dataFromJson(json_t* from)
         m_steps[index].each_n[3] = static_cast<bool>(json_integer_value(val_each_step4_enabled));
         m_steps[index].each_n[4] = static_cast<bool>(json_integer_value(val_each_step5_enabled));
     }
+
+    getParam(PARAM_STEP1).setValue(1.0);
+    setCurrentStep(0);
 }
