@@ -7,9 +7,10 @@
 
 constexpr const int kLenSteps = 16;
 constexpr const int kLenEach = 5;
+constexpr const float kMaximumVoltage = 10.0;
 
 // Default step values
-constexpr const bool kStepDefaultEnabled = 1.0;
+constexpr const bool kStepDefaultEnabled = 0.0;
 constexpr const bool kStepDefaultEach1 = 1.0;
 constexpr const bool kStepDefaultEach2 = 1.0;
 constexpr const bool kStepDefaultEach3 = 1.0;
@@ -139,9 +140,10 @@ struct HardSeqs : Module
   HardSeqs();
   void process(const ProcessArgs &args) override;
 
-  void setCurrentStep(int step);
+  void setSelectedStep(int step);
   void stepParamChangedHandler(int step_param_id);
   void syncParamWithLocalSteps(int step_param_id);
+  void clearAllStepLights();
 
   json_t* dataToJson() override;
   void dataFromJson(json_t* root_json) override;
@@ -151,10 +153,10 @@ struct HardSeqs : Module
   std::unique_ptr<SynthDevKit::CV> m_cv_clock;
   std::unique_ptr<SynthDevKit::CV> m_cv_reset;
 
+  uint8_t m_selected_step = 0;
   uint8_t m_current_step = 0;
-  uint8_t m_length = 4; // step length
   uint8_t m_current_loop = 0;
-  uint8_t m_loop_length = 4; // for_each impl
+  uint8_t m_loop_length = 4; // TODO : for_each impl
 
   bool m_is_running = false;
   bool m_is_once = false;

@@ -165,7 +165,7 @@ void HardSeqsWidget::stepSwitchHandler(int idx)
 
 
     m_module->getParam(idx).setValue(1.0);
-    m_module->setCurrentStep(idx - HardSeqs::ParamIds::PARAM_STEP1);
+    m_module->setSelectedStep(idx - HardSeqs::ParamIds::PARAM_STEP1);
 }
 
 Model *modelHardSeqs = createModel<HardSeqs, HardSeqsWidget>("HardSeqs");

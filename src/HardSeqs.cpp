@@ -5,8 +5,8 @@
 
 #define ADD_CV(a, b) clamp(a.value + b.value, 0.0f, 10.0f)
 constexpr const float kCvThreshold = 1.7;
-constexpr const float kStepEnabled = 0.3;
-constexpr const float kStepPlaying = 1.0;
+constexpr const float kStepEnabled = 0.1;
+constexpr const float kStepPlaying = 0.9;
 
 HardSeqs::HardSeqs() 
 {
@@ -16,7 +16,7 @@ HardSeqs::HardSeqs()
     m_cv_clock.reset(new SynthDevKit::CV(kCvThreshold));
     m_cv_reset.reset(new SynthDevKit::CV(kCvThreshold));
 
-    configParam(HardSeqs::PARAM_LEN, 1.0, 4.0, 4.0);
+    configParam(HardSeqs::PARAM_LEN, 0.0, 16.0, 16.0);
     configParam(HardSeqs::PARAM_REPEAT_N, 0.0, 4.0, 0.0);
 
     configParam(HardSeqs::PARAM_STEP_PROB, 0.0, 100.0, kStepDefaultProb);
@@ -25,13 +25,13 @@ HardSeqs::HardSeqs()
     configParam(HardSeqs::PARAM_STEP_MOD3, -100.0, 100.0, kStepDefaultMod3);
     configParam(HardSeqs::PARAM_STEP_ELEN, 0.0, 5.0, kStepDefaultElen);
 
-    getParam(PARAM_STEP1 + m_current_step).setValue(1.0);
+    getParam(PARAM_STEP1 + m_selected_step).setValue(1.0);
 }
 
-void HardSeqs::setCurrentStep(int step)
+void HardSeqs::setSelectedStep(int step)
 {
-    m_current_step = step;
-    std::cout << "current hardseq step : " << static_cast<int>(m_current_step) << "\n";
+    m_selected_step = step;
+    std::cout << "selected hardseq step : " << static_cast<int>(m_selected_step) << "\n";
 
     // Update step params from local
     const auto& local_entry = m_steps.at(step);
@@ -84,25 +84,26 @@ void HardSeqs::process(const ProcessArgs &args)
         m_current_loop = 0;
     }
 
+    clearAllStepLights();
+
     // cv clock
-    if (m_cv_clock->newTrigger())
+    if (m_cv_clock->newTrigger() && m_is_running)
     {
-        outputs[OUT_GATE].setVoltage(m_steps[m_current_step].is_enabled ? 1.0 : 0.0);
+
+        outputs[OUT_GATE].setVoltage(m_steps[m_current_step].is_enabled ? kMaximumVoltage : 0.0);
         outputs[OUT_MOD1].setVoltage(m_steps[m_current_step].mod1);
         outputs[OUT_MOD2].setVoltage(m_steps[m_current_step].mod2);
         outputs[OUT_MOD3].setVoltage(m_steps[m_current_step].mod3);
 
-        outputs[m_current_step].setVoltage(m_steps[m_current_step].is_enabled ? 1.0 : 0.0);
-
-        // TODO : light led impl
+        outputs[m_current_step].setVoltage(m_steps[m_current_step].is_enabled ? kMaximumVoltage : 0.0);
 
         m_current_step++;
 
-        if (m_current_step == m_length) {
+        if (m_current_step >= getParam(PARAM_LEN).value) {
             m_current_step = 0;
 
             m_current_loop++;
-            if (m_current_loop == m_loop_length)
+            if (m_current_loop >= m_loop_length - 1)
                 m_current_loop = 0;
         }
     }
@@ -122,7 +123,6 @@ void HardSeqs::process(const ProcessArgs &args)
     }
 
     lights[LED_IS_RUNNING].value = m_is_running ? 1.0 : 0.0;
-    lights[LED_STEP1].value = kStepEnabled;
 }
 
 void HardSeqs::stepParamChangedHandler(int step_param_id)
@@ -140,7 +140,7 @@ void HardSeqs::stepParamChangedHandler(int step_param_id)
 
 void HardSeqs::syncParamWithLocalSteps(int step_param_id)
 {
-    auto &cur_entry = m_steps[m_current_step];
+    auto &cur_entry = m_steps[m_selected_step];
 
     if (step_param_id == PARAM_STEP_ENABLED) {
         cur_entry.is_enabled = static_cast<bool>(getParam(step_param_id).value);
@@ -227,5 +227,14 @@ void HardSeqs::dataFromJson(json_t* from)
     }
 
     getParam(PARAM_STEP1).setValue(1.0);
-    setCurrentStep(0);
+    setSelectedStep(0);
+}
+
+void HardSeqs::clearAllStepLights()
+{
+    for (int i = 0; i < kLenSteps; ++i) {
+        lights[i + LED_STEP1].value = m_steps[i].is_enabled ? kStepEnabled : 0.0;
+    }
+
+    lights[LED_STEP1 + m_current_step].value = kStepPlaying;
 }
