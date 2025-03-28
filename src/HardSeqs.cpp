@@ -80,8 +80,7 @@ void HardSeqs::process(const ProcessArgs &args)
     // cv reset
     if (m_cv_reset->newTrigger())
     {
-        m_current_step = 0;
-        m_current_loop = 0;
+        resetSteps();
     }
 
     clearAllStepLights();
@@ -89,22 +88,33 @@ void HardSeqs::process(const ProcessArgs &args)
     // cv clock
     if (m_cv_clock->newTrigger() && m_is_running)
     {
+        auto &step_entry = m_steps[m_current_step];
+        
+        bool is_trigger = false;
+        const auto is_loop_trigger = step_entry.isTrigger();
 
-        outputs[OUT_GATE].setVoltage(m_steps[m_current_step].is_enabled ? kMaximumVoltage : 0.0);
-        outputs[OUT_MOD1].setVoltage(m_steps[m_current_step].mod1);
-        outputs[OUT_MOD2].setVoltage(m_steps[m_current_step].mod2);
-        outputs[OUT_MOD3].setVoltage(m_steps[m_current_step].mod3);
+        if (is_loop_trigger) {
+            const auto prob_val = rand_gen_.randomPercent(step_entry.prob);
 
-        outputs[m_current_step].setVoltage(m_steps[m_current_step].is_enabled ? kMaximumVoltage : 0.0);
+            if (step_entry.prob == 100 || prob_val) {
+                is_trigger = step_entry.is_enabled;
+            }
+        }
+
+        outputs[OUT_STEP1 + m_current_step].setVoltage(is_trigger ? kMaximumVoltage : 0.0);
+        outputs[OUT_GATE].setVoltage(is_trigger ? kMaximumVoltage : 0.0);
+
+        outputs[OUT_MOD1].setVoltage(step_entry.mod1);
+        outputs[OUT_MOD2].setVoltage(step_entry.mod2);
+        outputs[OUT_MOD3].setVoltage(step_entry.mod3);
 
         m_current_step++;
 
         if (m_current_step >= getParam(PARAM_LEN).value) {
             m_current_step = 0;
 
-            m_current_loop++;
-            if (m_current_loop >= m_loop_length - 1)
-                m_current_loop = 0;
+            for (auto &it_step : m_steps)
+                it_step.incrementLoop();
         }
     }
 
@@ -145,15 +155,15 @@ void HardSeqs::syncParamWithLocalSteps(int step_param_id)
     if (step_param_id == PARAM_STEP_ENABLED) {
         cur_entry.is_enabled = static_cast<bool>(getParam(step_param_id).value);
     } else if (step_param_id == PARAM_STEP_EACH1) {
-        cur_entry.each_n[0] = static_cast<bool>(getParam(step_param_id).value);
+        cur_entry.each_n[0] = getParam(step_param_id).value == 1.0;
     } else if (step_param_id == PARAM_STEP_EACH2) {
-        cur_entry.each_n[1] = static_cast<bool>(getParam(step_param_id).value);
+        cur_entry.each_n[1] = getParam(step_param_id).value == 1.0;
     } else if (step_param_id == PARAM_STEP_EACH3) {
-        cur_entry.each_n[2] = static_cast<bool>(getParam(step_param_id).value);
+        cur_entry.each_n[2] = getParam(step_param_id).value == 1.0;
     } else if (step_param_id == PARAM_STEP_EACH4) {
-        cur_entry.each_n[3] = static_cast<bool>(getParam(step_param_id).value);
+        cur_entry.each_n[3] = getParam(step_param_id).value == 1.0;
     } else if (step_param_id == PARAM_STEP_EACH5) {
-        cur_entry.each_n[4] = static_cast<bool>(getParam(step_param_id).value);
+        cur_entry.each_n[4] = getParam(step_param_id).value == 1.0;
     } else if (step_param_id == PARAM_STEP_PROB) {
         cur_entry.prob = getParam(step_param_id).value;
     } else if (step_param_id == PARAM_STEP_MOD1) {
@@ -169,7 +179,9 @@ void HardSeqs::syncParamWithLocalSteps(int step_param_id)
 
 json_t* HardSeqs::dataToJson()
 {
-    json_t* out_json_array = json_array();
+    json_t* out = json_object();
+
+    json_t* steps_array = json_array();
 
     for (const auto &it : m_steps) {
         json_t* json_entry = json_object();
@@ -187,18 +199,24 @@ json_t* HardSeqs::dataToJson()
         json_object_set_new(json_entry, "each_step4_enabled", json_integer(static_cast<int>(it.each_n[3])));
         json_object_set_new(json_entry, "each_step5_enabled", json_integer(static_cast<int>(it.each_n[4])));
 
-        json_array_append_new(out_json_array, json_entry);
+        json_array_append_new(steps_array, json_entry);
     }
 
-    return out_json_array;
+    json_object_set_new(out, "steps", steps_array);
+    json_object_set_new(out, "is_running", json_integer(static_cast<int>(m_is_running)));
+
+    return out;
 }
 
 void HardSeqs::dataFromJson(json_t* from)
 {
+    json_t* steps_array = json_object_get(from, "steps");
+    json_t* is_running = json_object_get(from, "is_running");
+
     std::size_t index;
     json_t* json_entry;
 
-    json_array_foreach(from, index, json_entry) {
+    json_array_foreach(steps_array, index, json_entry) {
         json_t* val_is_enabled = json_object_get(json_entry, "is_enabled");
         json_t* val_prob = json_object_get(json_entry, "prob");
         json_t* val_mod1 = json_object_get(json_entry, "mod1");
@@ -226,6 +244,8 @@ void HardSeqs::dataFromJson(json_t* from)
         m_steps[index].each_n[4] = static_cast<bool>(json_integer_value(val_each_step5_enabled));
     }
 
+    m_is_running = static_cast<bool>(json_integer_value(is_running));
+
     getParam(PARAM_STEP1).setValue(1.0);
     setSelectedStep(0);
 }
@@ -237,4 +257,24 @@ void HardSeqs::clearAllStepLights()
     }
 
     lights[LED_STEP1 + m_current_step].value = kStepPlaying;
+}
+
+void HardSeqs::resetSteps()
+{
+    m_current_step = 0;
+
+    for (auto &it : m_steps)
+        it.cur_n = 0;
+}
+
+void HardSeqs::StepEntry::incrementLoop()
+{
+    cur_n += 1;
+    if (cur_n >= len_each_n)
+        cur_n = 0;
+}
+
+bool HardSeqs::StepEntry::isTrigger() const
+{
+    return each_n[cur_n];
 }

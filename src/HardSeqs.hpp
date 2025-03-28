@@ -2,8 +2,11 @@
 #include <array>
 #include <memory>
 
+#include "RandomGenerator.hpp"
+
 #include "CV.hpp"
 #include "Plugin.hpp"
+
 
 constexpr const int kLenSteps = 16;
 constexpr const int kLenEach = 5;
@@ -128,13 +131,17 @@ struct HardSeqs : Module
 
     std::array<bool, kLenEach> each_n = {kStepDefaultEach1, kStepDefaultEach2, kStepDefaultEach3, kStepDefaultEach4, kStepDefaultEach5};
     int len_each_n = kStepDefaultElen;
+    int cur_n = 0;
 
     int prob = kStepDefaultProb;
     float mod1 = kStepDefaultMod1;
     float mod2 = kStepDefaultMod2;
     float mod3 = kStepDefaultMod3;
 
-    StepEntry() {}
+    void incrementLoop();
+    bool isTrigger() const;
+
+    StepEntry() = default;
   };
 
   HardSeqs();
@@ -144,6 +151,7 @@ struct HardSeqs : Module
   void stepParamChangedHandler(int step_param_id);
   void syncParamWithLocalSteps(int step_param_id);
   void clearAllStepLights();
+  void resetSteps();
 
   json_t* dataToJson() override;
   void dataFromJson(json_t* root_json) override;
@@ -155,11 +163,9 @@ struct HardSeqs : Module
 
   uint8_t m_selected_step = 0;
   uint8_t m_current_step = 0;
-  uint8_t m_current_loop = 0;
-  uint8_t m_loop_length = 4; // TODO : for_each impl
-
   bool m_is_running = false;
-  bool m_is_once = false;
+
+  RandomGenerator rand_gen_;
 
   std::array<StepEntry, kLenSteps> m_steps = 
   {
