@@ -3,10 +3,11 @@
 #include <iostream>
 #include "jansson.h"
 
-#define ADD_CV(a, b) clamp(a.value + b.value, 0.0f, 10.0f)
+
 constexpr const float kCvThreshold = 1.7;
 constexpr const float kStepEnabled = 0.1;
 constexpr const float kStepPlaying = 0.9;
+constexpr const float kModOutputDenum = 10.0;
 
 HardSeqs::HardSeqs() 
 {
@@ -53,10 +54,10 @@ void HardSeqs::setSelectedStep(int step)
 
 void HardSeqs::process(const ProcessArgs &args)
 {
-    float cv_start = inputs[INP_START].getVoltage();
-    float cv_stop = inputs[INP_STOP].getVoltage();
-    float cv_clock = inputs[INP_CLOCK].getVoltage();
-    float cv_reset = inputs[INP_RST].getVoltage();
+    const auto cv_start = inputs[INP_START].getVoltage();
+    const auto cv_stop = inputs[INP_STOP].getVoltage();
+    const auto cv_clock = inputs[INP_CLOCK].getVoltage();
+    const auto cv_reset = inputs[INP_RST].getVoltage();
 
     m_cv_start->update(cv_start);
     m_cv_stop->update(cv_stop);
@@ -104,9 +105,9 @@ void HardSeqs::process(const ProcessArgs &args)
         outputs[OUT_STEP1 + m_current_step].setVoltage(is_trigger ? kMaximumVoltage : 0.0);
         outputs[OUT_GATE].setVoltage(is_trigger ? kMaximumVoltage : 0.0);
 
-        outputs[OUT_MOD1].setVoltage(step_entry.mod1);
-        outputs[OUT_MOD2].setVoltage(step_entry.mod2);
-        outputs[OUT_MOD3].setVoltage(step_entry.mod3);
+        outputs[OUT_MOD1].setVoltage(step_entry.mod1 / kModOutputDenum);
+        outputs[OUT_MOD2].setVoltage(step_entry.mod2 / kModOutputDenum);
+        outputs[OUT_MOD3].setVoltage(step_entry.mod3 / kModOutputDenum);
 
         m_current_step++;
 
@@ -115,6 +116,11 @@ void HardSeqs::process(const ProcessArgs &args)
 
             for (auto &it_step : m_steps)
                 it_step.incrementLoop();
+
+            m_cur_loop++;
+            if (m_cur_loop >= getParam(PARAM_REPEAT_N).value && getParam(PARAM_REPEAT_N).value != 0.0) {
+                m_is_running = false;
+            }
         }
     }
 

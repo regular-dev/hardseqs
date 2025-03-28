@@ -165,6 +165,8 @@ struct HardSeqs : Module
   uint8_t m_current_step = 0;
   bool m_is_running = false;
 
+  uint8_t m_cur_loop = 0;
+
   RandomGenerator rand_gen_;
 
   std::array<StepEntry, kLenSteps> m_steps = 
