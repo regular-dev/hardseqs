@@ -30,7 +30,7 @@ struct HardSeqs : Module
   enum ParamIds { 
     PARAM_REPEAT_N,
     PARAM_IS_RUN,
-    PARAM_LEN, 
+    PARAM_LEN,
     PARAM_SEL,
 
     PARAM_STEP_ENABLED,
@@ -67,8 +67,8 @@ struct HardSeqs : Module
 
   // cv input
   enum InputIds {
-    INP_START,
-    INP_STOP,
+    INP_RUN,
+    INP_POS,
     INP_CLOCK,
     INP_RST,
 
@@ -156,11 +156,11 @@ struct HardSeqs : Module
   json_t* dataToJson() override;
   void dataFromJson(json_t* root_json) override;
 
-  std::unique_ptr<SynthDevKit::CV> m_cv_start;
-  std::unique_ptr<SynthDevKit::CV> m_cv_stop;
+  std::unique_ptr<SynthDevKit::CV> m_cv_run;
   std::unique_ptr<SynthDevKit::CV> m_cv_clock;
   std::unique_ptr<SynthDevKit::CV> m_cv_reset;
 
+  uint8_t m_start_pos = 0;
   uint8_t m_selected_step = 0;
   uint8_t m_current_step = 0;
   bool m_is_running = false;

@@ -9,11 +9,20 @@ constexpr const float kStepEnabled = 0.1;
 constexpr const float kStepPlaying = 0.9;
 constexpr const float kModOutputDenum = 10.0;
 
+template<typename T>
+T clamp(const T &v, const T &val_max, const T &val_min) {
+    if (v > val_max)
+        return val_max;
+    else if (v < val_min)
+        return val_min;
+    else
+        return v;
+}
+
 HardSeqs::HardSeqs() 
 {
     config(PARAM_COUNT, INP_COUNT, OUT_COUNT, LED_COUNT);
-    m_cv_start.reset(new SynthDevKit::CV(kCvThreshold));
-    m_cv_stop.reset(new SynthDevKit::CV(kCvThreshold));
+    m_cv_run.reset(new SynthDevKit::CV(kCvThreshold));
     m_cv_clock.reset(new SynthDevKit::CV(kCvThreshold));
     m_cv_reset.reset(new SynthDevKit::CV(kCvThreshold));
 
@@ -54,28 +63,35 @@ void HardSeqs::setSelectedStep(int step)
 
 void HardSeqs::process(const ProcessArgs &args)
 {
-    const auto cv_start = inputs[INP_START].getVoltage();
-    const auto cv_stop = inputs[INP_STOP].getVoltage();
+    const auto cv_start = inputs[INP_RUN].getVoltage();
+    const auto cv_pos = inputs[INP_POS].getVoltage();
     const auto cv_clock = inputs[INP_CLOCK].getVoltage();
     const auto cv_reset = inputs[INP_RST].getVoltage();
 
-    m_cv_start->update(cv_start);
-    m_cv_stop->update(cv_stop);
+    m_cv_run->update(cv_start);
     m_cv_clock->update(cv_clock);
     m_cv_reset->update(cv_reset);
 
-    // cv start
-    if (m_cv_start->newTrigger())
+    // cv run
+    if (m_cv_run->newTrigger())
     {
-        m_is_running = true;
-        lights[LED_IS_RUNNING].value = 1.0;  
+        m_is_running = !m_is_running;
+        lights[LED_IS_RUNNING].value = static_cast<float>(m_is_running); 
     }
 
-    // cv stop
-    if (m_cv_stop->newTrigger())
+    // x     cv_pos
+    // 16    5.0
+
+    if (cv_pos > 0.0)
     {
-        m_is_running = false;
-        lights[LED_IS_RUNNING].value = 0.0;
+        m_start_pos = static_cast<int>((16.0 * cv_pos) / 5.0);
+        m_start_pos = clamp(m_start_pos, 0.0, kLenSteps - 1);
+
+        std::cout << "setting start pos = " << (int)m_start_pos << "\n";
+        // cv pos can modulate from 0...5V, where 0 = first step, 5V = last step.
+    } else {
+        std::cout << "setting start pos = 0\n";
+        m_start_pos = 0;
     }
 
     // cv reset
@@ -111,8 +127,8 @@ void HardSeqs::process(const ProcessArgs &args)
 
         m_current_step++;
 
-        if (m_current_step >= getParam(PARAM_LEN).value) {
-            m_current_step = 0;
+        if (m_current_step >= std::min(static_cast<int>(m_start_pos + getParam(PARAM_LEN).value), kLenSteps)) {
+            m_current_step = m_start_pos;
 
             for (auto &it_step : m_steps)
                 it_step.incrementLoop();
@@ -193,7 +209,7 @@ json_t* HardSeqs::dataToJson()
         json_t* json_entry = json_object();
 
         json_object_set_new(json_entry, "is_enabled", json_integer(static_cast<int>(it.is_enabled)));
-        json_object_set_new(json_entry, "prob", json_real(it.prob));
+        json_object_set_new(json_entry, "prob", json_integer(it.prob));
         json_object_set_new(json_entry, "mod1", json_real(it.mod1));
         json_object_set_new(json_entry, "mod2", json_real(it.mod2));
         json_object_set_new(json_entry, "mod3", json_real(it.mod3));
@@ -267,7 +283,7 @@ void HardSeqs::clearAllStepLights()
 
 void HardSeqs::resetSteps()
 {
-    m_current_step = 0;
+    m_current_step = m_start_pos;
 
     for (auto &it : m_steps)
         it.cur_n = 0;

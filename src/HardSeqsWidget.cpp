@@ -32,10 +32,10 @@ HardSeqsWidget::HardSeqsWidget(HardSeqs *module)
     /* -- Top Panel Rect Start -- */
     {
         // Start trigger input
-        addInput(createInput<CDPort>(Vec(80, 18), module, HardSeqs::INP_START));
+        addInput(createInput<CDPort>(Vec(80, 18), module, HardSeqs::INP_RUN));
 
         // Stop trigger input
-        addInput(createInput<CDPort>(Vec(129, 18), module, HardSeqs::INP_STOP));
+        addInput(createInput<CDPort>(Vec(129, 18), module, HardSeqs::INP_POS));
 
         // Clock input
         addInput(createInput<CDPort>(Vec(186, 18), module, HardSeqs::INP_CLOCK));
