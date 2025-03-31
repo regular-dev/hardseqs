@@ -3,8 +3,6 @@
 #include <iostream>
 #include "jansson.h"
 
-
-constexpr const float kCvThreshold = 1.7;
 constexpr const float kStepEnabled = 0.1;
 constexpr const float kStepPlaying = 0.9;
 constexpr const float kModOutputDenum = 10.0;
@@ -21,10 +19,9 @@ T clamp(const T &v, const T &val_max, const T &val_min) {
 
 HardSeqs::HardSeqs() 
 {
+    std::cout << "CREATED MODULE\n";
+
     config(PARAM_COUNT, INP_COUNT, OUT_COUNT, LED_COUNT);
-    m_cv_run.reset(new SynthDevKit::CV(kCvThreshold));
-    m_cv_clock.reset(new SynthDevKit::CV(kCvThreshold));
-    m_cv_reset.reset(new SynthDevKit::CV(kCvThreshold));
 
     configParam(HardSeqs::PARAM_LEN, 0.0, 16.0, 16.0);
     configParam(HardSeqs::PARAM_REPEAT_N, 0.0, 4.0, 0.0);
@@ -68,42 +65,39 @@ void HardSeqs::process(const ProcessArgs &args)
     const auto cv_clock = inputs[INP_CLOCK].getVoltage();
     const auto cv_reset = inputs[INP_RST].getVoltage();
 
-    m_cv_run->update(cv_start);
-    m_cv_clock->update(cv_clock);
-    m_cv_reset->update(cv_reset);
+    m_cv_run.update(cv_start);
+    m_cv_clock.update(cv_clock);
+    m_cv_reset.update(cv_reset);
 
     // cv run
-    if (m_cv_run->newTrigger())
+    if (m_cv_run.newTrigger())
     {
         m_is_running = !m_is_running;
         lights[LED_IS_RUNNING].value = static_cast<float>(m_is_running); 
     }
 
-    // x     cv_pos
-    // 16    5.0
-
     if (cv_pos > 0.0)
     {
         m_start_pos = static_cast<int>((16.0 * cv_pos) / 5.0);
         m_start_pos = clamp(m_start_pos, 0.0, kLenSteps - 1);
-
-        std::cout << "setting start pos = " << (int)m_start_pos << "\n";
         // cv pos can modulate from 0...5V, where 0 = first step, 5V = last step.
     } else {
-        std::cout << "setting start pos = 0\n";
+        //std::cout << "setting start pos = 0\n";
         m_start_pos = 0;
     }
 
     // cv reset
-    if (m_cv_reset->newTrigger())
+    if (m_cv_reset.newTrigger())
     {
         resetSteps();
     }
 
     clearAllStepLights();
+    clearAllStepOutputs();
+    outputs[OUT_GATE].setVoltage(0.0);
 
     // cv clock
-    if (m_cv_clock->newTrigger() && m_is_running)
+    if (m_cv_clock.newTrigger() && m_is_running)
     {
         auto &step_entry = m_steps[m_current_step];
         
@@ -279,6 +273,12 @@ void HardSeqs::clearAllStepLights()
     }
 
     lights[LED_STEP1 + m_current_step].value = kStepPlaying;
+}
+
+void HardSeqs::clearAllStepOutputs()
+{
+    for (int i = OUT_STEP1; i <= OUT_STEP16; ++i)
+        outputs[i].setVoltage(0.0);
 }
 
 void HardSeqs::resetSteps()

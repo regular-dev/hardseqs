@@ -11,6 +11,7 @@
 constexpr const int kLenSteps = 16;
 constexpr const int kLenEach = 5;
 constexpr const float kMaximumVoltage = 10.0;
+constexpr const float kCvThreshold = 1.7;
 
 // Default step values
 constexpr const bool kStepDefaultEnabled = 0.0;
@@ -151,14 +152,15 @@ struct HardSeqs : Module
   void stepParamChangedHandler(int step_param_id);
   void syncParamWithLocalSteps(int step_param_id);
   void clearAllStepLights();
+  void clearAllStepOutputs();
   void resetSteps();
 
   json_t* dataToJson() override;
   void dataFromJson(json_t* root_json) override;
 
-  std::unique_ptr<SynthDevKit::CV> m_cv_run;
-  std::unique_ptr<SynthDevKit::CV> m_cv_clock;
-  std::unique_ptr<SynthDevKit::CV> m_cv_reset;
+  SynthDevKit::CV m_cv_run {kCvThreshold};
+  SynthDevKit::CV m_cv_clock {kCvThreshold};
+  SynthDevKit::CV m_cv_reset {kCvThreshold};
 
   uint8_t m_start_pos = 0;
   uint8_t m_selected_step = 0;
