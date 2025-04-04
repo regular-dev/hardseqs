@@ -94,7 +94,14 @@ void HardSeqs::process(const ProcessArgs &args)
 
     clearAllStepLights();
     clearAllStepOutputs();
-    outputs[OUT_GATE].setVoltage(0.0);
+
+    if (cv_clock < kCvThreshold) {
+        outputs[OUT_GATE].setVoltage(0.0);
+
+        for (int i = OUT_STEP1; i <= OUT_STEP16; ++i) {
+            outputs[i].setVoltage(0.0);
+        }
+    }
 
     // cv clock
     if (m_cv_clock.newTrigger() && m_is_running)
