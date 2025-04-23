@@ -11,7 +11,7 @@
 constexpr const int kLenSteps = 16;
 constexpr const int kLenEach = 5;
 constexpr const float kMaximumVoltage = 10.0;
-constexpr const float kCvThreshold = 1.7;
+constexpr const float kCvThreshold = 0.5;
 
 // Default step values
 constexpr const bool kStepDefaultEnabled = 0.0;

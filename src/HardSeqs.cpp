@@ -60,20 +60,22 @@ void HardSeqs::setSelectedStep(int step)
 
 void HardSeqs::process(const ProcessArgs &args)
 {
-    const auto cv_start = inputs[INP_RUN].getVoltage();
     const auto cv_pos = inputs[INP_POS].getVoltage();
     const auto cv_clock = inputs[INP_CLOCK].getVoltage();
     const auto cv_reset = inputs[INP_RST].getVoltage();
 
-    m_cv_run.update(cv_start);
     m_cv_clock.update(cv_clock);
     m_cv_reset.update(cv_reset);
 
     // cv run
-    if (m_cv_run.newTrigger())
+    if (inputs[INP_RUN].isConnected())
     {
-        m_is_running = !m_is_running;
-        lights[LED_IS_RUNNING].value = static_cast<float>(m_is_running); 
+        m_cv_run.update(inputs[INP_RUN].getVoltage());
+
+        if (m_cv_run.newTrigger()) {
+            m_is_running = !m_is_running;
+            lights[LED_IS_RUNNING].value = static_cast<float>(m_is_running); 
+        }
     }
 
     if (cv_pos > 0.0)
