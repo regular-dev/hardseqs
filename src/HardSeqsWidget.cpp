@@ -20,6 +20,7 @@ struct HardSeqsWidget : ModuleWidget
         HardSeqsWidget(HardSeqs *module);
 
         void stepSwitchHandler(int step_idx);
+        void appendContextMenu(Menu *menu) override;
 };
 
 HardSeqsWidget::HardSeqsWidget(HardSeqs *module) 
@@ -185,6 +186,44 @@ void HardSeqsWidget::stepSwitchHandler(int idx)
 
     m_module->getParam(idx).setValue(1.0);
     m_module->setSelectedStep(idx - HardSeqs::ParamIds::PARAM_STEP1);
+}
+
+void HardSeqsWidget::appendContextMenu(Menu* menu) 
+{
+    ModuleWidget::appendContextMenu(menu);
+
+    menu->addChild(new MenuSeparator());
+
+    menu->addChild(createMenuItem("Disable all gates","",
+    [this] ()
+    {
+        m_module->generateRandomGateSequence(0);
+    }));
+    menu->addChild(createMenuItem("Generate random gate sequence (temp = 10)","",
+    [this] ()
+    {
+        m_module->generateRandomGateSequence(10);
+    }));
+    menu->addChild(createMenuItem("Generate random gate sequence (temp = 25)","",
+    [this] ()
+    {
+        m_module->generateRandomGateSequence(25);
+    }));
+    menu->addChild(createMenuItem("Generate random gate sequence (temp = 50)","",
+    [this] ()
+    {
+        m_module->generateRandomGateSequence(50);
+    }));
+    menu->addChild(createMenuItem("Generate random gate sequence (temp = 75)","",
+    [this] ()
+    {
+        m_module->generateRandomGateSequence(75);
+    }));
+    menu->addChild(createMenuItem("Generate random gate sequence (temp = 90)","",
+    [this] ()
+    {
+        m_module->generateRandomGateSequence(90);
+    }));
 }
 
 Model *modelHardSeqs = createModel<HardSeqs, HardSeqsWidget>("HardSeqs");

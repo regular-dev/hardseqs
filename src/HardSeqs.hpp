@@ -156,6 +156,7 @@ struct HardSeqs : Module
   void clearAllStepLights();
   void clearAllStepOutputs();
   void resetSteps();
+  void generateRandomGateSequence(int temp);
 
   json_t* dataToJson() override;
   void dataFromJson(json_t* root_json) override;

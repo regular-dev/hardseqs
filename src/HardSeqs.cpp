@@ -299,6 +299,12 @@ void HardSeqs::resetSteps()
         it.cur_n = 0;
 }
 
+void HardSeqs::generateRandomGateSequence(int temp)
+{
+    for (int i = 0; i < kLenSteps; ++i)
+        m_steps[i].is_enabled = rand_gen_.randomPercent(temp);
+}
+
 void HardSeqs::StepEntry::incrementLoop()
 {
     cur_n += 1;
