@@ -132,9 +132,9 @@ void HardSeqs::process(const ProcessArgs &args)
         outputs[OUT_STEP1 + m_current_step].setVoltage(is_trigger ? kMaximumVoltage : 0.0);
         outputs[OUT_GATE].setVoltage(is_trigger ? kMaximumVoltage : 0.0);
 
-        outputs[OUT_MOD1].setVoltage(step_entry.mod1 / kModOutputDenum);
-        outputs[OUT_MOD2].setVoltage(step_entry.mod2 / kModOutputDenum);
-        outputs[OUT_MOD3].setVoltage(step_entry.mod3 / kModOutputDenum);
+        outputs[OUT_MOD1].setVoltage(is_trigger ? step_entry.mod1 / kModOutputDenum : 0.0);
+        outputs[OUT_MOD2].setVoltage(is_trigger ? step_entry.mod2 / kModOutputDenum : 0.0);
+        outputs[OUT_MOD3].setVoltage(is_trigger ? step_entry.mod3 / kModOutputDenum : 0.0);
 
         m_current_step++;
 
