@@ -3,6 +3,9 @@
 #include <iostream>
 #include "jansson.h"
 
+#undef HS_DEBUG
+
+
 constexpr const float kStepEnabled = 0.1;
 constexpr const float kStepPlaying = 0.9;
 constexpr const float kModOutputDenum = 10.0;
@@ -19,7 +22,9 @@ T clamp(const T &v, const T &val_max, const T &val_min) {
 
 HardSeqs::HardSeqs() 
 {
+    #ifdef HS_DEBUG
     std::cout << "CREATED MODULE\n";
+    #endif
 
     config(PARAM_COUNT, INP_COUNT, OUT_COUNT, LED_COUNT);
 
@@ -39,7 +44,10 @@ HardSeqs::HardSeqs()
 void HardSeqs::setSelectedStep(int step)
 {
     m_selected_step = step;
+
+    #ifdef HS_DEBUG
     std::cout << "selected hardseq step : " << static_cast<int>(m_selected_step) << "\n";
+    #endif
 
     // Update step params from local
     const auto& local_entry = m_steps.at(step);
@@ -85,7 +93,6 @@ void HardSeqs::process(const ProcessArgs &args)
         m_start_pos = clamp(m_start_pos, 0.0, kLenSteps - 1);
         // cv pos can modulate from 0...5V, where 0 = first step, 5V = last step.
     } else {
-        //std::cout << "setting start pos = 0\n";
         m_start_pos = 0;
     }
 
@@ -163,7 +170,9 @@ void HardSeqs::process(const ProcessArgs &args)
 
 void HardSeqs::stepParamChangedHandler(int step_param_id)
 {
+    #ifdef HS_DEBUG
     std::cout << "hardseqs changed param : " << step_param_id << "\n";
+    #endif
 
     if (step_param_id >= PARAM_STEP_ENABLED && step_param_id <= PARAM_STEP_EACH5) {
         const auto param_val = getParam(step_param_id).value;

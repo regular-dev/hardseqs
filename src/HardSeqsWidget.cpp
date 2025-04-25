@@ -78,7 +78,8 @@ HardSeqsWidget::HardSeqsWidget(HardSeqs *module)
         m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameKey1.svg")));
         m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameKey2.svg")));
 
-        m_label->setFrame(static_cast<int>(m_module->params[HardSeqs::PARAM_LABEL].value));
+        if (module)
+            m_label->setFrame(static_cast<int>(m_module->params.at(HardSeqs::PARAM_LABEL).value));
 
         addParam(m_label);
 
@@ -156,7 +157,8 @@ HardSeqsWidget::HardSeqsWidget(HardSeqs *module)
     step_prob->setCallback(std::bind(&HardSeqs::stepParamChangedHandler, module, std::placeholders::_1));
     addChild(step_prob);
 
-    auto step_mod1 = createParam<CustomLightKnob>(Vec(139.0, 321.5), module, HardSeqs::ParamIds::PARAM_STEP_MOD1);
+    auto step_mod1 = createParam<CustomLightSnapFreeKnob>(Vec(139.0, 321.5), module, HardSeqs::ParamIds::PARAM_STEP_MOD1);
+    step_mod1->snap = false;
     step_mod1->setCallback(std::bind(&HardSeqs::stepParamChangedHandler, module, std::placeholders::_1));
     addChild(step_mod1);
 
@@ -176,7 +178,9 @@ HardSeqsWidget::HardSeqsWidget(HardSeqs *module)
 
 void HardSeqsWidget::stepSwitchHandler(int idx)
 {
+    #ifdef HS_DEBUG
     std::cout << "selected step : " << idx << "\n";
+    #endif
 
     for (int i = HardSeqs::ParamIds::PARAM_STEP1; i < HardSeqs::ParamIds::PARAM_STEP16 + 1; ++i) {
         // m_module->getParam(i).setValue(0.0);

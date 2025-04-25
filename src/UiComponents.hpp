@@ -119,6 +119,12 @@ struct CustomLightKnob : LightKnobSnap
         }
 };
 
+struct CustomLightSnapFreeKnob : CustomLightKnob
+{
+    public:
+        CustomLightSnapFreeKnob() : CustomLightKnob() { snap = false; }
+};
+
 struct SpriteSwitcher : SvgSwitch
 {
     protected:
@@ -154,6 +160,9 @@ struct SpriteSwitcher : SvgSwitch
 
         void setFrame(int frame_id)
         {
+            if (frame_id < 0 || frame_id >= m_frames.size())
+                return;
+
             m_cur_frame = frame_id;
             m_svg_widget->setSvg(m_frames[m_cur_frame]);
         }
