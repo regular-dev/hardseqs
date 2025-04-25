@@ -63,6 +63,8 @@ struct HardSeqs : Module
     PARAM_STEP15,
     PARAM_STEP16,
 
+    PARAM_LABEL,
+
     PARAM_COUNT
   };
 

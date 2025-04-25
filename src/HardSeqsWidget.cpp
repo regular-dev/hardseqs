@@ -14,6 +14,7 @@ struct HardSeqsWidget : ModuleWidget
     protected:
         HardSeqs *m_module {nullptr};
         std::uint64_t m_start_time;
+        SpriteSwitcher *m_label {nullptr};
 
     public:
         HardSeqsWidget(HardSeqs *module);
@@ -48,17 +49,38 @@ HardSeqsWidget::HardSeqsWidget(HardSeqs *module)
     /* Left panel rect start */
     {
         // Sequence length
-        addParam(createParam<LightKnobSnap>(Vec(19.0, 75.0), module, HardSeqs::PARAM_LEN));
+        addParam(createParam<LightKnobSnap>(Vec(19.0, 71.0), module, HardSeqs::PARAM_LEN));
 
         // IsOnce
         //CommonSwitch
-        addParam(createParam<LightKnobSnap>(Vec(19.7, 139.7), module, HardSeqs::PARAM_REPEAT_N));
+        addParam(createParam<LightKnobSnap>(Vec(19.7, 135.7), module, HardSeqs::PARAM_REPEAT_N));
 
         // Is running led(light)
-        addChild(createLight<MediumLight<RedLight>>(Vec(28.0, 205.145), module, HardSeqs::LED_IS_RUNNING));
+        addChild(createLight<MediumLight<RedLight>>(Vec(28.0, 201.145), module, HardSeqs::LED_IS_RUNNING));
 
         // Is once led(light)
-        addChild(createLight<MediumLight<RedLight>>(Vec(28.0, 240.002), module, HardSeqs::LED_IS_ONCE));
+        addChild(createLight<MediumLight<RedLight>>(Vec(28.0, 236.002), module, HardSeqs::LED_IS_ONCE));
+
+        m_label = createParam<SpriteSwitcher>(Vec(15.0, 275.0), module, HardSeqs::PARAM_LABEL);
+
+        m_label->setCallback([&] (int cur_label) { m_module->params[HardSeqs::PARAM_LABEL].setValue(cur_label - 1); } );
+
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameKik1.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameKik2.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameCHat1.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameCHat2.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameOHat.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameSnr1.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameSnr2.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameTom1.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNamePerc.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameKey1.svg")));
+        m_label->addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SeqNameKey2.svg")));
+
+        m_label->setFrame(static_cast<int>(m_module->params[HardSeqs::PARAM_LABEL].value));
+
+        addParam(m_label);
+
     }
     /* Left panel rect end */
 
@@ -68,9 +90,6 @@ HardSeqsWidget::HardSeqsWidget(HardSeqs *module)
         addOutput(createOutput<CDPort>(Vec(250, 118.484), module, HardSeqs::OUT_MOD1));
         addOutput(createOutput<CDPort>(Vec(250, 157.096), module, HardSeqs::OUT_MOD2));
         addOutput(createOutput<CDPort>(Vec(250, 194.137), module, HardSeqs::OUT_MOD3));
-
-        // TODO : add LightKnobs
-
     }
     /* Right panel rect end */
 

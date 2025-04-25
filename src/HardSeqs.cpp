@@ -25,6 +25,7 @@ HardSeqs::HardSeqs()
 
     configParam(HardSeqs::PARAM_LEN, 0.0, 16.0, 16.0);
     configParam(HardSeqs::PARAM_REPEAT_N, 0.0, 4.0, 0.0);
+    configParam(HardSeqs::PARAM_LABEL, 0.0, 11.0, 0.0);
 
     configParam(HardSeqs::PARAM_STEP_PROB, 0.0, 100.0, kStepDefaultProb);
     configParam(HardSeqs::PARAM_STEP_MOD1, -100.0, 100.0, kStepDefaultMod1);
