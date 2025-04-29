@@ -81,7 +81,10 @@ void HardSeqs::process(const ProcessArgs &args)
     {
         m_cv_run.update(inputs[INP_RUN].getVoltage());
 
-        if (m_cv_run.newTrigger()) {
+        // sequence will turn off automatically if PARAM_REPEAT_N is set, so we ignore signal if we already running
+        bool is_enabled_and_limit_repeat = m_is_running && getParam(PARAM_REPEAT_N).value != 0.0;
+
+        if (m_cv_run.newTrigger() && is_enabled_and_limit_repeat == false) {
             m_is_running = !m_is_running;
             lights[LED_IS_RUNNING].value = static_cast<float>(m_is_running); 
         }
