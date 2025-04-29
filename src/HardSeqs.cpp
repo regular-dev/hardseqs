@@ -147,6 +147,7 @@ void HardSeqs::process(const ProcessArgs &args)
             m_cur_loop++;
             if (m_cur_loop >= getParam(PARAM_REPEAT_N).value && getParam(PARAM_REPEAT_N).value != 0.0) {
                 m_is_running = false;
+                m_cur_loop = 0;
             }
         }
     }
