@@ -47,15 +47,38 @@ HardSeqs::HardSeqs()
 
     config(PARAM_COUNT, INP_COUNT, OUT_COUNT, LED_COUNT);
 
-    configParam(HardSeqs::PARAM_LEN, 0.0, 16.0, 16.0);
-    configParam(HardSeqs::PARAM_REPEAT_N, 0.0, 4.0, 0.0);
-    configParam(HardSeqs::PARAM_LABEL, 0.0, 11.0, 0.0);
+    // setup params
+    configParam(PARAM_LEN, 0.0, 16.0, 16.0, "Sequence length");
+    configParam(PARAM_REPEAT_N, 0.0, 4.0, 0.0, "Repeat times");
+    configParam(PARAM_LABEL, 0.0, 11.0, 0.0, "Instrument label");
 
-    configParam(HardSeqs::PARAM_STEP_PROB, 0.0, 100.0, kStepDefaultProb);
-    configParam(HardSeqs::PARAM_STEP_MOD1, -100.0, 100.0, kStepDefaultMod1);
-    configParam(HardSeqs::PARAM_STEP_MOD2, -100.0, 100.0, kStepDefaultMod2);
-    configParam(HardSeqs::PARAM_STEP_MOD3, -100.0, 100.0, kStepDefaultMod3);
-    configParam(HardSeqs::PARAM_STEP_ELEN, 0.0, 5.0, kStepDefaultElen);
+    configParam(PARAM_STEP_PROB, 0.0, 100.0, kStepDefaultProb, "Probability");
+    configParam(PARAM_STEP_MOD1, -100.0, 100.0, kStepDefaultMod1, "Mod1");
+    configParam(PARAM_STEP_MOD2, -100.0, 100.0, kStepDefaultMod2, "Mod2");
+    configParam(PARAM_STEP_MOD3, -100.0, 100.0, kStepDefaultMod3, "Mod3");
+    configParam(PARAM_STEP_ELEN, 0.0, 5.0, kStepDefaultElen, "Play each n-time length");
+    configParam(PARAM_STEP_ENABLED, 0.0, 1.0, 0.0, "Gate");
+    
+    for (int i = PARAM_STEP_EACH1; i <= PARAM_STEP_EACH5; ++i)
+        configParam(i, 0.0, 1.0, 0.0, "Play each " + std::to_string(i - PARAM_STEP_EACH1 + 1) + "-th iteration");
+
+    for (int i = PARAM_STEP1; i <= PARAM_STEP16; ++i)
+        configParam(i, 0.0, 1.0, 0.0, "Select " + std::to_string(i - PARAM_STEP1 + 1) + "-th step");
+
+    // setup input
+    configInput(INP_RUN, "Run/stop trigger");
+    configInput(INP_POS, "Start pos modulation");
+    configInput(INP_CLOCK, "Clock");
+    configInput(INP_RST, "Reset");
+
+    // setup output
+    for (int i = OUT_STEP1; i <= OUT_STEP16; ++i)
+        configOutput(i, "Out step " + std::to_string(i - OUT_STEP1 + 1));
+
+    configOutput(OUT_GATE, "Out gate");
+    configOutput(OUT_MOD1, "Out mod1");
+    configOutput(OUT_MOD2, "Out mod2");
+    configOutput(OUT_MOD3, "Out mod3");
 
     getParam(PARAM_STEP1 + m_selected_step).setValue(1.0);
 }
