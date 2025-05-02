@@ -2,7 +2,7 @@
   "slug": "HardSeqs",
   "name": "HardSeqs",
   "version": "2.0.0",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-or-later",
   "brand": "Regular-dev",
   "author": "Regular-dev",
   "authorEmail": "regular.dev.org@gmail.com",
